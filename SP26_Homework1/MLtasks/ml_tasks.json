@@ -1,0 +1,90 @@
+{
+  "version": "1.1.0",
+  "prompt_language": "en",
+  "interface_protocols": {
+    "pytorch_task_v1": {
+      "entrypoint": "python tasks/<task_id>/task.py",
+      "prompt_instructions": "Implement this ML task as a SINGLE self-contained Python file (task.py). Include all required functions AND a complete `if __name__ == '__main__':` block that trains the model, evaluates on a validation split, prints standard metrics (MSE, R2, parameter accuracy where applicable), and asserts quality thresholds so the script exits non-zero on failure. Do NOT create separate test files or README. The script itself is the test.",
+      "must_have_files": [
+        "tasks/<task_id>/task.py"
+      ],
+      "required_functions": [
+        "get_task_metadata",
+        "set_seed",
+        "get_device",
+        "make_dataloaders",
+        "build_model",
+        "train",
+        "evaluate",
+        "predict",
+        "save_artifacts"
+      ],
+      "required_cfg_keys": [],
+      "standard_outputs_schema": {},
+      "docstring_rules": []
+    }
+  },
+  "tasks": [
+    {
+      "series": "Linear Regression",
+      "level": 5,
+      "id": "linreg_lvl5_sgd_scheduler",
+      "algorithm": "Linear Regression (SGD + Scheduler)",
+      "description": "Univariate linear regression on a noisy synthetic dataset using mini-batch SGD with a learning-rate scheduler and gradient clipping.",
+      "interface_protocol": "pytorch_task_v1",
+      "requirements": {
+        "data": "Synthetic: y = -1.5x + 0.7 + noise; 1000 samples, 80/20 train/validation split.",
+        "implementation": "Use torch.utils.data.DataLoader for mini-batches; implement SGD with optional momentum, gradient clipping, and StepLR scheduler.",
+        "evaluation": "The evaluate() function must compute and return MSE and R2 on both train and validation splits; report learned parameters vs true coefficients.",
+        "main_block": "The main block must train long enough for good convergence, print metrics and parameters, and assert R2_val > 0.9 and parameter L2 error < 0.5.",
+        "output": "Return dict with loss_history, val_loss_history, and final train/val metrics."
+      }
+    },
+    {
+      "series": "Logistic Regression",
+      "level": 5,
+      "id": "logreg_lvl5_weight_decay_augment",
+      "algorithm": "Logistic Regression (Weight Decay + Feature Noise)",
+      "description": "Binary logistic regression on a 2D Gaussian dataset with feature noise augmentation and L2 weight decay.",
+      "interface_protocol": "pytorch_task_v1",
+      "requirements": {
+        "data": "Two 2D Gaussian clusters with some overlap; 1000 samples, standardized features, 80/20 train/validation split.",
+        "implementation": "Use torch.nn for a linear classifier and BCEWithLogitsLoss with weight decay; apply Gaussian noise augmentation to inputs during training.",
+        "evaluation": "The evaluate() function must compute accuracy, precision, recall, and F1 on the validation split.",
+        "main_block": "The main block must train the model, print metrics, and assert validation accuracy > 0.9 and F1 > 0.9.",
+        "output": "Return dict with train/val loss history and classification metrics."
+      }
+    },
+    {
+      "series": "Convolutional Neural Networks",
+      "level": 5,
+      "id": "cnn_lvl5_augmented_mnist_like",
+      "algorithm": "Small CNN with Data Augmentation (MNIST-like)",
+      "description": "Train a small CNN on a synthetic MNIST-like dataset generated from random blobs with data augmentation and early stopping.",
+      "interface_protocol": "pytorch_task_v1",
+      "requirements": {
+        "data": "Synthetic 1-channel 16x16 images with 3 classes generated from Gaussian blobs; 2000 samples, 80/20 train/validation split.",
+        "implementation": "Use nn.Conv2d-based CNN with ReLU and max-pooling; apply random flips and small affine transforms for augmentation; use Adam optimizer.",
+        "evaluation": "The evaluate() function must compute accuracy and macro-F1 on the validation split.",
+        "main_block": "Include early stopping on validation accuracy, print best epoch metrics, and assert validation accuracy > 0.9.",
+        "output": "Return dict with history of train/val loss and accuracy, and final best metrics."
+      }
+    },
+    {
+      "series": "Sequence Models (RNN/LSTM)",
+      "level": 5,
+      "id": "rnn_lvl5_gru_time_series",
+      "algorithm": "GRU Regression (Synthetic Time Series)",
+      "description": "Sequence-to-one regression on a synthetic noisy sine-wave time series using a GRU-based model.",
+      "interface_protocol": "pytorch_task_v1",
+      "requirements": {
+        "data": "Generate a univariate sine-wave with noise; build sliding windows of length 20 and predict the next value; 80/20 train/validation split.",
+        "implementation": "Use nn.GRU followed by a linear head; train with MSE loss and Adam optimizer; support GPU if available.",
+        "evaluation": "The evaluate() function must compute MSE and R2 on train and validation splits.",
+        "main_block": "Train until convergence with a patience-based early stopping, print metrics, and assert validation R2 > 0.9 and MSE < 0.05.",
+        "output": "Return dict with train/val loss history and final metrics."
+      }
+    }
+  ]
+}
+
